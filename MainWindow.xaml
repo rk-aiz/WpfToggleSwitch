@@ -10,7 +10,11 @@
         <StackPanel Orientation="Vertical"
                     VerticalAlignment="Center">
             <local:ToggleSwitch />
-            <local:ToggleSwitch Margin="10"
+            <local:ToggleSwitch Margin="20"
+                                SwitchHeight="50"
+                                SwitchWidth="100"/>
+            <local:ToggleSwitch Padding="10"
+                                HighlightBrush="#FF53FF91"
                                 SwitchHeight="50"
                                 SwitchWidth="100"/>
         </StackPanel>

@@ -17,7 +17,7 @@ namespace WpfToggleSwitch
     /// <summary>
     /// Code behind only ToggleSwitch for PowerShell WPF execution
     /// </summary>
-    public sealed class ToggleSwitch : CustomButtonBase
+    public sealed class ToggleSwitch : ButtonBase
     {
         private const double _ratioOfEllipseRadiusToSwitchHeight = 0.375;
         private const double _ellipseShrinkScale = 0.9;
