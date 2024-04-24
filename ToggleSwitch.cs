@@ -20,8 +20,7 @@ namespace WpfToggleSwitch
     public sealed class ToggleSwitch : ButtonBase
     {
         private const double _ratioOfEllipseRadiusToSwitchHeight = 0.375;
-        private const double _ellipseShrinkScale = 0.9;
-        private bool _translating = false;
+        private const double _ellipseShrinkScale = 0.95;
         private ScaleTransform _ellipseScaleTransform = new ScaleTransform(_ellipseShrinkScale, _ellipseShrinkScale);
         private TranslateTransform _ellipseTranslateTransform = new TranslateTransform();
 
@@ -34,52 +33,36 @@ namespace WpfToggleSwitch
             EllipseTransformGroup = tg;
 
             Style = CreateStyle();
-
-            IsVisibleChanged += (s, e) => { AdjustTransform(); };
         }
 
-        private void AdjustTransform()
+        private void BeginEllipseTranslateAnimation(int duration = 300)
         {
-            _ellipseScaleTransform.CenterY = SwitchHeight * _ratioOfEllipseRadiusToSwitchHeight;
-            _ellipseScaleTransform.CenterX = SwitchHeight * _ratioOfEllipseRadiusToSwitchHeight;
-
-            if (IsOn)
-                _ellipseTranslateTransform.X = (SwitchWidth * 0.5) - (SwitchHeight * 0.5);
-            else
-                _ellipseTranslateTransform.X = (SwitchWidth * -0.5) + (SwitchHeight * 0.5);
-        }
-
-        private void BeginEllipseTranslateAnimation(double percent = 0.0, bool important = false)
-        {
-            if (_translating && !important) return;
-            _translating = true;
-
             if (IsOn)
             {
                 var anim = new DoubleAnimation
                 {
-                    To = (SwitchWidth * 0.5) - (SwitchHeight * (0.5 + percent)),
-                    Duration = TimeSpan.FromMilliseconds(300),
+                    From = (SwitchWidth * -0.5) + (SwitchHeight * 0.5),
+                    To = 0,
+                    Duration = TimeSpan.FromMilliseconds(duration),
                     EasingFunction = new CircleEase
                     {
                         EasingMode = EasingMode.EaseOut
                     }
                 };
-                anim.Completed += (s, e) => { _translating = false; };
                 _ellipseTranslateTransform.BeginAnimation(TranslateTransform.XProperty, anim, HandoffBehavior.SnapshotAndReplace);
             }
             else
             {
                 var anim = new DoubleAnimation
                 {
-                    To = (SwitchWidth * -0.5) + (SwitchHeight * 0.5),
-                    Duration = TimeSpan.FromMilliseconds(300),
+                    From = (SwitchWidth * 0.5) - (SwitchHeight * 0.5),
+                    To = 0,
+                    Duration = TimeSpan.FromMilliseconds(duration),
                     EasingFunction = new CircleEase
                     {
                         EasingMode = EasingMode.EaseOut
                     }
                 };
-                anim.Completed += (s, e) => { _translating = false; };
                 _ellipseTranslateTransform.BeginAnimation(TranslateTransform.XProperty, anim, HandoffBehavior.SnapshotAndReplace);
             }
         }
@@ -112,14 +95,12 @@ namespace WpfToggleSwitch
         protected override void OnMouseLeave(System.Windows.Input.MouseEventArgs e)
         {
             BeginEllipseScaleAnimation(_ellipseShrinkScale, 100, new SineEase { EasingMode = EasingMode.EaseOut });
-            BeginEllipseTranslateAnimation(0.0);
             base.OnMouseLeave(e);
         }
 
         protected override void OnMouseDown(System.Windows.Input.MouseButtonEventArgs e)
         {
-            BeginEllipseScaleAnimation(_ellipseShrinkScale * 0.95);
-            BeginEllipseTranslateAnimation(0.1);
+            BeginEllipseScaleAnimation(_ellipseShrinkScale, 0);
             base.OnMouseDown(e);
         }
 
@@ -131,56 +112,66 @@ namespace WpfToggleSwitch
 
         private static Style CreateStyle()
         {
-            var ellipse = new FrameworkElementFactory(typeof(Ellipse), "ellipse");
-            ellipse.SetValue(Shape.FillProperty, new TemplateBindingExtension(ForegroundProperty));
+            var ellipseSizeBinding = new TemplateBindingExtension(SwitchHeightProperty)
+            {
+                Converter = MultiplicationValueConverter.I,
+                ConverterParameter = _ratioOfEllipseRadiusToSwitchHeight * 2
+            };
+            var ellipseRadiusBinding = new TemplateBindingExtension(SwitchHeightProperty)
+            {
+                Converter = MultiplicationValueConverter.I,
+                ConverterParameter = _ratioOfEllipseRadiusToSwitchHeight
+            };
+
+            var ellipse = new FrameworkElementFactory(typeof(Rectangle), "ellipse");
             ellipse.SetValue(VerticalAlignmentProperty, VerticalAlignment.Center);
-            ellipse.SetValue(HeightProperty, new TemplateBindingExtension(SwitchHeightProperty)
-            {
-                Converter = MultiplicationValueConverter.I,
-                ConverterParameter = _ratioOfEllipseRadiusToSwitchHeight * 2
+            ellipse.SetValue(HorizontalAlignmentProperty, HorizontalAlignment.Left);
+            ellipse.SetValue(HeightProperty, ellipseSizeBinding);
+            ellipse.SetValue(WidthProperty, ellipseSizeBinding);
+            ellipse.SetValue(MarginProperty, new TemplateBindingExtension(SwitchHeightProperty){
+                Converter = DoubleToThicknessConverter.I,
+                ConverterParameter = 0.5 - _ratioOfEllipseRadiusToSwitchHeight 
             });
-            ellipse.SetValue(WidthProperty, new TemplateBindingExtension(SwitchHeightProperty)
-            {
-                Converter = MultiplicationValueConverter.I,
-                ConverterParameter = _ratioOfEllipseRadiusToSwitchHeight * 2
-            });
+            ellipse.SetValue(Shape.FillProperty, new TemplateBindingExtension(ForegroundProperty));
+            ellipse.SetValue(Rectangle.RadiusXProperty, ellipseRadiusBinding);
+            ellipse.SetValue(Rectangle.RadiusYProperty, ellipseRadiusBinding);
             ellipse.SetValue(RenderTransformProperty, new TemplateBindingExtension(EllipseTransformGroupProperty));
+            ellipse.SetValue(RenderTransformOriginProperty, new Point(0.5, 0.5));
 
-            var background = new FrameworkElementFactory(typeof(Border), "background");
-            background.SetValue(BackgroundProperty, new TemplateBindingExtension(BackgroundProperty));
-            background.SetValue(HeightProperty, new TemplateBindingExtension(SwitchHeightProperty));
-            background.SetValue(WidthProperty, new TemplateBindingExtension(SwitchWidthProperty));
-            background.SetValue(Border.CornerRadiusProperty, new TemplateBindingExtension(SwitchHeightProperty)
+            var radiusBinding = new TemplateBindingExtension(SwitchHeightProperty)
             {
-                Converter = HightToCornerRadiusConverter.I,
+                Converter = MultiplicationValueConverter.I,
                 ConverterParameter = 0.5
-            });
+            };
+            var heightBinding = new TemplateBindingExtension(SwitchHeightProperty);
+            var widthBinding = new TemplateBindingExtension(SwitchWidthProperty);
 
-            var highlight = new FrameworkElementFactory(typeof(Border), "highlight");
+            var background = new FrameworkElementFactory(typeof(Rectangle), "background");
+            background.SetValue(HeightProperty, heightBinding);
+            background.SetValue(WidthProperty, widthBinding);
+            background.SetValue(Shape.FillProperty, new TemplateBindingExtension(BackgroundProperty));
+            background.SetValue(Rectangle.RadiusXProperty, radiusBinding);
+            background.SetValue(Rectangle.RadiusYProperty, radiusBinding);
+
+            var highlight = new FrameworkElementFactory(typeof(Rectangle), "highlight");
             highlight.SetValue(VisibilityProperty, Visibility.Collapsed);
-            highlight.SetValue(BackgroundProperty, new TemplateBindingExtension(HighlightBrushProperty));
-            highlight.SetValue(HeightProperty, new TemplateBindingExtension(SwitchHeightProperty));
-            highlight.SetValue(WidthProperty, new TemplateBindingExtension(SwitchWidthProperty));
-            highlight.SetValue(Border.CornerRadiusProperty, new TemplateBindingExtension(SwitchHeightProperty)
-            {
-                Converter = HightToCornerRadiusConverter.I,
-                ConverterParameter = 0.5
-            });
+            highlight.SetValue(HeightProperty, heightBinding);
+            highlight.SetValue(WidthProperty, widthBinding);
+            highlight.SetValue(Shape.FillProperty, new TemplateBindingExtension(HighlightBrushProperty));
+            highlight.SetValue(Rectangle.RadiusXProperty, radiusBinding);
+            highlight.SetValue(Rectangle.RadiusYProperty, radiusBinding);
 
-            var border = new FrameworkElementFactory(typeof(Border), "border");
-            border.SetValue(BackgroundProperty, Brushes.Transparent);
-            border.SetValue(HeightProperty, new TemplateBindingExtension(SwitchHeightProperty));
-            border.SetValue(WidthProperty, new TemplateBindingExtension(SwitchWidthProperty));
-            border.SetValue(Border.BorderBrushProperty, new TemplateBindingExtension(BorderBrushProperty));
-            border.SetValue(Border.BorderThicknessProperty, new TemplateBindingExtension(BorderThicknessProperty));
-            border.SetValue(Border.CornerRadiusProperty, new TemplateBindingExtension(SwitchHeightProperty)
-            {
-                Converter = HightToCornerRadiusConverter.I,
-                ConverterParameter = 0.5
-            });
+            var border = new FrameworkElementFactory(typeof(Rectangle), "border");
+            border.SetValue(HeightProperty, heightBinding);
+            border.SetValue(WidthProperty, widthBinding);
+            border.SetValue(Shape.FillProperty, Brushes.Transparent);
+            border.SetValue(Shape.StrokeProperty, new TemplateBindingExtension(BorderBrushProperty));
+            border.SetValue(Shape.StrokeThicknessProperty, new TemplateBindingExtension(BorderThicknessProperty));
+            border.SetValue(Rectangle.RadiusXProperty, radiusBinding);
+            border.SetValue(Rectangle.RadiusYProperty, radiusBinding);
 
             var switchArea = new FrameworkElementFactory(typeof(Grid), "switchGrid");
-            switchArea.SetValue(MinHeightProperty, new TemplateBindingExtension(SwitchHeightProperty));
+            switchArea.SetValue(MinHeightProperty, heightBinding); 
             switchArea.SetValue(MarginProperty, new TemplateBindingExtension(PaddingProperty));
             switchArea.AppendChild(background);
             switchArea.AppendChild(highlight);
@@ -196,22 +187,46 @@ namespace WpfToggleSwitch
 
             var isOnTrigger = new Trigger
             {
-                Property = ToggleSwitch.IsOnProperty,
+                Property = IsOnProperty,
                 Value = true,
             };
+            isOnTrigger.Setters.Add(new Setter(HorizontalAlignmentProperty, HorizontalAlignment.Right, "ellipse"));
             isOnTrigger.Setters.Add(new Setter(Shape.FillProperty, Brushes.Black, "ellipse"));
+            isOnTrigger.Setters.Add(new Setter(VisibilityProperty, Visibility.Collapsed, "background"));
             isOnTrigger.Setters.Add(new Setter(VisibilityProperty, Visibility.Visible, "highlight"));
-            isOnTrigger.Setters.Add(new Setter(BorderThicknessProperty, new Thickness(0), "border"));
+            isOnTrigger.Setters.Add(new Setter(Shape.StrokeThicknessProperty, 0.0, "border"));
 
             var mouseOverBrush = new SolidColorBrush(new Color { A = 30, R = 0, G = 0, B = 0 });
             mouseOverBrush.Freeze();
 
             var mouseOverTrigger = new Trigger
             {
-                Property = UIElement.IsMouseOverProperty,
+                Property = IsMouseOverProperty,
                 Value = true,
             };
-            mouseOverTrigger.Setters.Add(new Setter(BackgroundProperty, mouseOverBrush, "border"));
+            mouseOverTrigger.Setters.Add(new Setter(Shape.FillProperty, mouseOverBrush, "border"));
+
+            var ellipsePressedWidthBinding = new Binding("SwitchHeight")
+            {
+                Mode = BindingMode.OneWay,
+                RelativeSource = RelativeSource.TemplatedParent,
+                Converter = MultiplicationValueConverter.I,
+                ConverterParameter = _ratioOfEllipseRadiusToSwitchHeight * 2.4
+            };
+
+            var pressedTrigger = new Trigger
+            {
+                Property = IsPressedProperty,
+                Value = true,
+            };
+            pressedTrigger.Setters.Add(new Setter(WidthProperty, ellipsePressedWidthBinding, "ellipse"));
+
+            var disabledTrigger = new Trigger
+            {
+                Property = IsEnabledProperty,
+                Value = false,
+            };
+            disabledTrigger.Setters.Add(new Setter(OpacityProperty, 0.35));
 
             var ct = new ControlTemplate(typeof(ButtonBase))
             {
@@ -219,6 +234,8 @@ namespace WpfToggleSwitch
             };
             ct.Triggers.Add(isOnTrigger);
             ct.Triggers.Add(mouseOverTrigger);
+            ct.Triggers.Add(pressedTrigger);
+            ct.Triggers.Add(disabledTrigger);
 
             var style = new Style(typeof(ButtonBase));
             style.Setters.Add(new Setter(TemplateProperty, ct));
@@ -239,7 +256,7 @@ namespace WpfToggleSwitch
             var source = d as ToggleSwitch;
             if ((bool)e.OldValue == (bool)e.NewValue || source == null) return;
 
-            source.BeginEllipseTranslateAnimation(0.0, true);
+            source.BeginEllipseTranslateAnimation();
         }
 
         /**
@@ -272,8 +289,8 @@ namespace WpfToggleSwitch
         }
 
         public static readonly DependencyProperty SwitchWidthProperty =
-            DependencyProperty.Register("SwitchWidth", typeof(double), typeof(ToggleSwitch),
-                                        new PropertyMetadata(40.0, (s, e) => { ((ToggleSwitch)s).AdjustTransform(); }));
+            DependencyProperty.Register("SwitchWidth",
+                typeof(double), typeof(ToggleSwitch), new PropertyMetadata(40.0));
 
         public double SwitchHeight
         {
@@ -282,8 +299,8 @@ namespace WpfToggleSwitch
         }
 
         public static readonly DependencyProperty SwitchHeightProperty =
-            DependencyProperty.Register("SwitchHeight", typeof(double), typeof(ToggleSwitch),
-                                        new PropertyMetadata(20.0, (s, e) => { ((ToggleSwitch)s).AdjustTransform(); }));
+            DependencyProperty.Register("SwitchHeight",
+                typeof(double), typeof(ToggleSwitch), new PropertyMetadata(20.0));
 
         public TransformGroup EllipseTransformGroup
         {
@@ -295,15 +312,15 @@ namespace WpfToggleSwitch
             DependencyProperty.Register("EllipseTransformGroup", typeof(TransformGroup), typeof(ToggleSwitch), null);
 
 
-        [ValueConversion(typeof(double), typeof(CornerRadius))]
-        private class HightToCornerRadiusConverter : IValueConverter
+        [ValueConversion(typeof(double), typeof(Thickness))]
+        private class DoubleToThicknessConverter : IValueConverter
         {
-            public static HightToCornerRadiusConverter I = new HightToCornerRadiusConverter();
+            public static DoubleToThicknessConverter I = new DoubleToThicknessConverter();
 
-            public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+            public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
             {
                 if (value is double || parameter is double)
-                    return new CornerRadius((double)value * (double)parameter);
+                    return new Thickness((double)value * (double)parameter);
                 else
                     throw new ArgumentException();
             }

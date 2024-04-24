@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System.Dynamic;
+using System.Globalization;
 using System.Text;
 using System.Windows;
 
@@ -11,6 +12,10 @@ namespace WpfToggleSwitch
     {
         public MainWindow()
         {
+            dynamic expObj = new ExpandoObject();
+            expObj.IsOn = true;
+
+            DataContext = expObj;
             InitializeComponent();
         }
     }

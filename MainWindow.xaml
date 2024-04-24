@@ -11,10 +11,23 @@
                     VerticalAlignment="Center">
             <local:ToggleSwitch />
             <local:ToggleSwitch Margin="20"
+                                IsEnabled="False"
                                 SwitchHeight="50"
                                 SwitchWidth="100"/>
-            <local:ToggleSwitch Padding="10"
+            <local:ToggleSwitch Padding="20, 5"
+                                Foreground="#FFFFFFFF"
+                                Background="#FF5E5E5E"
+                                BorderThickness="0"
                                 HighlightBrush="#FF53FF91"
+                                IsOn="{Binding IsOn}"
+                                SwitchHeight="50"
+                                SwitchWidth="100"/>
+            <local:ToggleSwitch Padding="20, 5"
+                                Foreground="#FFFFFFFF"
+                                Background="#FF5E5E5E"
+                                BorderThickness="0"
+                                HighlightBrush="#FFFF0DD6"
+                                IsOn="{Binding IsOn}"
                                 SwitchHeight="50"
                                 SwitchWidth="100"/>
         </StackPanel>
