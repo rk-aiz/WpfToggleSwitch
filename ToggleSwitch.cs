@@ -15,7 +15,7 @@ using System.Windows;
 namespace WpfToggleSwitch
 {
     /// <summary>
-    /// Code behind only ToggleSwitch for PowerShell WPF execution
+    /// Only code-behind ToggleSwitch for PowerShell WPF execution
     /// </summary>
     public sealed class ToggleSwitch : ButtonBase
     {
@@ -82,7 +82,7 @@ namespace WpfToggleSwitch
 
         protected override void OnClick()
         {
-            IsOn = !IsOn;
+            SetCurrentValue(IsOnProperty, !IsOn);
             base.OnClick();
         }
 
@@ -253,9 +253,8 @@ namespace WpfToggleSwitch
          */
         private static void IsOnChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            var source = d as ToggleSwitch;
-            if ((bool)e.OldValue == (bool)e.NewValue || source == null) return;
-
+            if ((bool)e.OldValue == (bool)e.NewValue) return;
+            var source = (ToggleSwitch)d;
             source.BeginEllipseTranslateAnimation();
         }
 
