@@ -72,7 +72,7 @@ namespace WpfToggleSwitch
             }
         }
 
-        private void BeginEllipseScaleAnimation(double percent = 1.0, int durationMillis = 100, IEasingFunction? easing = null, HandoffBehavior handoff = HandoffBehavior.SnapshotAndReplace)
+        private void BeginEllipseScaleAnimation(double percent, IEasingFunction easing, int durationMillis = 100, HandoffBehavior handoff = HandoffBehavior.SnapshotAndReplace)
         {
             var anim = new DoubleAnimation
             {
@@ -93,25 +93,30 @@ namespace WpfToggleSwitch
 
         protected override void OnMouseEnter(System.Windows.Input.MouseEventArgs e)
         {
-            BeginEllipseScaleAnimation(1.0);
+            BeginEllipseScaleAnimation(1.0, new SineEase());
             base.OnMouseEnter(e);
         }
 
         protected override void OnMouseLeave(System.Windows.Input.MouseEventArgs e)
         {
-            BeginEllipseScaleAnimation(_ellipseShrinkScale, 100, new SineEase { EasingMode = EasingMode.EaseOut });
+            BeginEllipseScaleAnimation(_ellipseShrinkScale, new SineEase { EasingMode = EasingMode.EaseOut });
             base.OnMouseLeave(e);
         }
 
         protected override void OnMouseDown(System.Windows.Input.MouseButtonEventArgs e)
         {
-            BeginEllipseScaleAnimation(_ellipseShrinkScale, 0);
+            BeginEllipseScaleAnimation(_ellipseShrinkScale, new SineEase(), 0);
             base.OnMouseDown(e);
         }
 
         protected override void OnLostMouseCapture(System.Windows.Input.MouseEventArgs e)
         {
-            BeginEllipseScaleAnimation(1.0, 200, new ElasticEase { Springiness = 10, Oscillations = 0, EasingMode = EasingMode.EaseIn }, HandoffBehavior.Compose);
+            BeginEllipseScaleAnimation(
+                1.0,
+                new ElasticEase { Springiness = 10, Oscillations = 0, EasingMode = EasingMode.EaseIn },
+                200,
+                HandoffBehavior.Compose
+            );
             base.OnLostMouseCapture(e);
         }
 
