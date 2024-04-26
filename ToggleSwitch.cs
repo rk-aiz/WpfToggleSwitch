@@ -227,7 +227,8 @@ namespace WpfToggleSwitch
             #endregion
 
             var switchArea = new FrameworkElementFactory(typeof(Grid), "switchGrid");
-            switchArea.SetValue(MinHeightProperty, heightBinding); 
+            switchArea.SetValue(MinHeightProperty, heightBinding);
+            switchArea.SetValue(MinWidthProperty, widthBinding);
             switchArea.SetValue(MarginProperty, new TemplateBindingExtension(PaddingProperty));
             switchArea.AppendChild(background);
             switchArea.AppendChild(highlight);
@@ -317,9 +318,8 @@ namespace WpfToggleSwitch
             source.BeginEllipseTranslateAnimation();
         }
 
-        /**
-         * Dependency properties
-         */
+        #region DependencyProperies
+
         public bool IsOn
         {
             get { return (bool)GetValue(IsOnProperty); }
@@ -369,6 +369,7 @@ namespace WpfToggleSwitch
         public static readonly DependencyProperty EllipseTransformGroupProperty =
             DependencyProperty.Register("EllipseTransformGroup", typeof(TransformGroup), typeof(ToggleSwitch), null);
 
+        #endregion DependencyProperies
 
         [ValueConversion(typeof(double), typeof(Thickness))]
         private class DoubleToThicknessConverter : IValueConverter
