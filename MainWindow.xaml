@@ -14,14 +14,7 @@
                                 IsEnabled="False"
                                 SwitchHeight="50"
                                 SwitchWidth="100"/>
-            <local:ToggleSwitch Padding="20, 5"
-                                Foreground="#FFFFFFFF"
-                                Background="#FF5E5E5E"
-                                BorderThickness="0"
-                                HighlightBrush="#FF53FF91"
-                                IsOn="{Binding IsOn}"
-                                SwitchHeight="50"
-                                SwitchWidth="100"/>
+
             <local:ToggleSwitch Padding="20, 5"
                                 Foreground="#FFFFFFFF"
                                 Background="#FF5E5E5E"
@@ -30,6 +23,17 @@
                                 IsOn="{Binding IsOn}"
                                 SwitchHeight="50"
                                 SwitchWidth="100"/>
+
+            <Border Background="#FF838383">
+            <local:ToggleSwitch Padding="20, 25"
+                                Foreground="#FFFFFFFF"
+                                BorderThickness="8"
+                                BorderBrush="#EAEDEF"
+                                HighlightBrush="#FF53FF91"
+                                IsOn="{Binding IsOn}"
+                                SwitchHeight="100"
+                                SwitchWidth="200"/>
+            </Border>
         </StackPanel>
     </Grid>
 </Window>
