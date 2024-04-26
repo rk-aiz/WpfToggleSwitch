@@ -24,6 +24,13 @@ namespace WpfToggleSwitch
         private ScaleTransform _ellipseScaleTransform = new ScaleTransform(_ellipseShrinkScale, _ellipseShrinkScale);
         private TranslateTransform _ellipseTranslateTransform = new TranslateTransform();
 
+        // Override dependency properties
+        static ToggleSwitch()
+        {
+            StyleProperty.OverrideMetadata(typeof(ToggleSwitch),
+                new FrameworkPropertyMetadata(CreateStyle()));
+        }
+
         public ToggleSwitch()
         {
             TransformGroup tg = new TransformGroup();
@@ -31,8 +38,6 @@ namespace WpfToggleSwitch
             tg.Children.Add(_ellipseTranslateTransform);
 
             EllipseTransformGroup = tg;
-
-            Style = CreateStyle();
         }
 
         private void BeginEllipseTranslateAnimation(int duration = 300)
