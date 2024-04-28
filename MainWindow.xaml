@@ -9,7 +9,16 @@
     <Grid>
         <StackPanel Orientation="Vertical"
                     VerticalAlignment="Center">
-            <local:ToggleSwitch />
+            <Canvas x:Name="myCanvas" Width="40" Height="20" Margin="0, 10">
+
+                <local:ToggleSwitch
+                    SwitchWidth="{Binding ActualWidth, ElementName=myCanvas}"
+                    SwitchHeight="{Binding ActualHeight, ElementName=myCanvas}"/>
+                <Thumb Name="myThumb" Canvas.Left="50" Canvas.Top="20" Background="Gray" 
+                    Width="15" Height="15" DragDelta="onDragDelta"
+                    DragStarted="onDragStarted" DragCompleted="onDragCompleted"
+                    />
+            </Canvas>
             <local:ToggleSwitch Margin="20"
                                 IsEnabled="False"
                                 SwitchHeight="50"

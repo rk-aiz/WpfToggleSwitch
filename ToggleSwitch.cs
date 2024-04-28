@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Controls.Primitives;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -17,7 +13,7 @@ namespace WpfToggleSwitch
     /// <summary>
     /// Only code-behind ToggleSwitch for PowerShell WPF execution
     /// </summary>
-    public sealed class ToggleSwitch : ButtonBase
+    public class ToggleSwitch : ButtonBase
     {
         private const double _ratioOfEllipseRadiusToSwitchHeight = 0.375;
         private const double _ellipseShrinkScale = 0.95;
@@ -37,10 +33,10 @@ namespace WpfToggleSwitch
             tg.Children.Add(_ellipseScaleTransform);
             tg.Children.Add(_ellipseTranslateTransform);
 
-            EllipseTransformGroup = tg;
+            SetValue(EllipseTransformGroupPropertyKey, tg);
         }
 
-        private void BeginEllipseTranslateAnimation(int duration = 300)
+        private void BeginEllipseTranslateAnimation()
         {
             if (IsOn)
             {
@@ -48,7 +44,7 @@ namespace WpfToggleSwitch
                 {
                     From = (SwitchWidth * -0.5) + (SwitchHeight * 0.5),
                     To = 0,
-                    Duration = TimeSpan.FromMilliseconds(duration),
+                    Duration = TimeSpan.FromSeconds(Duration),
                     EasingFunction = new CircleEase
                     {
                         EasingMode = EasingMode.EaseOut
@@ -62,7 +58,7 @@ namespace WpfToggleSwitch
                 {
                     From = (SwitchWidth * 0.5) - (SwitchHeight * 0.5),
                     To = 0,
-                    Duration = TimeSpan.FromMilliseconds(duration),
+                    Duration = TimeSpan.FromSeconds(Duration),
                     EasingFunction = new CircleEase
                     {
                         EasingMode = EasingMode.EaseOut
@@ -120,6 +116,7 @@ namespace WpfToggleSwitch
             base.OnLostMouseCapture(e);
         }
 
+        // Normally this should be written in XAML.
         private static Style CreateStyle()
         {
             var ellipseSizeBinding = new TemplateBindingExtension(SwitchHeightProperty)
@@ -274,12 +271,12 @@ namespace WpfToggleSwitch
                 ConverterParameter = _ratioOfEllipseRadiusToSwitchHeight * 2.4
             };
 
-            var pressedTrigger = new Trigger
+            var mouseCaptureTrigger = new Trigger
             {
-                Property = IsPressedProperty,
+                Property = IsMouseCapturedProperty,
                 Value = true,
             };
-            pressedTrigger.Setters.Add(new Setter(WidthProperty, ellipsePressedWidthBinding, "ellipse"));
+            mouseCaptureTrigger.Setters.Add(new Setter(WidthProperty, ellipsePressedWidthBinding, "ellipse"));
 
             var disabledTrigger = new Trigger
             {
@@ -294,7 +291,7 @@ namespace WpfToggleSwitch
             };
             ct.Triggers.Add(isOnTrigger);
             ct.Triggers.Add(mouseOverTrigger);
-            ct.Triggers.Add(pressedTrigger);
+            ct.Triggers.Add(mouseCaptureTrigger);
             ct.Triggers.Add(disabledTrigger);
 
             var style = new Style(typeof(ButtonBase));
@@ -328,7 +325,8 @@ namespace WpfToggleSwitch
 
         public static readonly DependencyProperty IsOnProperty =
             DependencyProperty.Register("IsOn",
-                typeof(bool), typeof(ToggleSwitch), new PropertyMetadata(false, IsOnChanged));
+                typeof(bool), typeof(ToggleSwitch), new FrameworkPropertyMetadata(
+                    false, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, IsOnChanged));
 
         public Brush HighlightBrush
         {
@@ -360,14 +358,21 @@ namespace WpfToggleSwitch
             DependencyProperty.Register("SwitchHeight",
                 typeof(double), typeof(ToggleSwitch), new PropertyMetadata(20.0));
 
-        public TransformGroup EllipseTransformGroup
+
+
+        private static readonly DependencyPropertyKey EllipseTransformGroupPropertyKey =
+            DependencyProperty.RegisterReadOnly("EllipseTransformGroup", typeof(TransformGroup), typeof(ToggleSwitch), null);
+
+        private static readonly DependencyProperty EllipseTransformGroupProperty = EllipseTransformGroupPropertyKey.DependencyProperty;
+
+        public double Duration
         {
-            get { return (TransformGroup)GetValue(EllipseTransformGroupProperty); }
-            set { SetValue(EllipseTransformGroupProperty, value); }
+            get { return (double)GetValue(DurationProperty); }
+            set { SetValue(DurationProperty, value); }
         }
 
-        public static readonly DependencyProperty EllipseTransformGroupProperty =
-            DependencyProperty.Register("EllipseTransformGroup", typeof(TransformGroup), typeof(ToggleSwitch), null);
+        public static readonly DependencyProperty DurationProperty =
+            DependencyProperty.Register("Duration", typeof(double), typeof(ToggleSwitch), new PropertyMetadata(0.3));
 
         #endregion DependencyProperies
 
